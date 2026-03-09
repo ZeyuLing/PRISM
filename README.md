@@ -17,11 +17,11 @@
 
 <p align="center"><b>Zeyu Ling</b>, <b>Qing Shuai</b>, <b>Teng Zhang</b>, <b>Shiyang Li</b>, <b>Bo Han</b>, <b>Changqing Zou</b></p>
 
-PRISM is a unified diffusion framework for 3D human motion generation, supporting **text-to-motion (T2M)**, **pose-conditioned generation (TP2M)**, and **long-horizon sequential generation** in a single model.
-
 ## Abstract
 
-We present PRISM, a streaming human motion generation framework built on per-joint latent decomposition. PRISM factorizes motion representation into semantically meaningful joint-wise latent tokens, which enables stable autoregressive generation over long horizons while preserving local motion detail. With one unified model, PRISM supports text-driven motion synthesis, pose-conditioned continuation, and multi-segment narrative composition. Experiments show strong generation quality, temporal consistency, and robustness for long sequences in both quantitative benchmarks and qualitative demos.
+Text-to-motion generation has advanced rapidly, yet two challenges persist. First, existing motion autoencoders compress each frame into a single monolithic latent vector, entangling trajectory and per-joint rotations in an unstructured representation that downstream generators struggle to model faithfully. Second, text-to-motion, pose-conditioned generation, and long-horizon sequential synthesis typically require separate models or task-specific mechanisms, with autoregressive approaches suffering from severe error accumulation over extended rollouts.
+
+We present PRISM, addressing each challenge with a dedicated contribution. **(1) A joint-factorized motion latent space**: each body joint occupies its own token, forming a structured 2D grid (time x joints) compressed by a causal VAE with forward-kinematics supervision. This simple change to the latent space, without modifying the generator, substantially improves generation quality, revealing that latent space design has been an underestimated bottleneck. **(2) Noise-free condition injection**: each latent token carries its own timestep embedding, allowing conditioning frames to be injected as clean tokens (timestep 0) while the remaining tokens are denoised. This unifies text-to-motion and pose-conditioned generation in a single model, and directly enables autoregressive segment chaining for streaming synthesis. Self-forcing training further suppresses drift in long rollouts. With these two components, we train a single motion generation foundation model that seamlessly handles text-to-motion, pose-conditioned generation, autoregressive sequential generation, and narrative motion composition, achieving state-of-the-art on HumanML3D, MotionHub, BABEL, and a 50-scenario user study.
 
 ## Demo
 
@@ -72,7 +72,18 @@ pip install -r requirements.txt
 All scripts assume you are in the `versatilemotion` repository root and checkpoint path is:
 `opensource/prism/pretrained_models/prism_1.4b`.
 
+### Task Scripts Overview
+
+| Script | Task | Input | Output |
+|---|---|---|---|
+| `run_t2m.py` | Text-to-Motion (single segment) | one text prompt | `smplx_dict.npz`, `prompt.txt` |
+| `run_tp2m.py` | Pose-Conditioned Generation (TP2M) | first frame (`.npz` or preset pose) + text | `smplx_dict.npz`, `prompt.txt`, `first_frame_source.txt` |
+| `run_sequential.py` | Sequential Multi-Segment | multiple prompts (+ optional per-segment lengths) | `smplx_dict.npz`, `prompts.txt` |
+| `run_narrative.py` | Narrative / Free-form Text | long text (semicolon split when `--no_rewriter`) | `smplx_dict.npz`, `prompts.txt` |
+
 ### Text-to-Motion
+
+Use this script when you want one prompt -> one motion clip.
 
 ```bash
 python opensource/prism/scripts/run_t2m.py \
@@ -81,7 +92,15 @@ python opensource/prism/scripts/run_t2m.py \
   --output_dir outputs/t2m
 ```
 
+Key arguments:
+- `--prompt`: required text prompt.
+- `--num_frames`: generated frame count (default `129`).
+- `--guidance_scale`: classifier-free guidance scale (default `5.0`).
+- `--device`: optional device (e.g., `cuda:0`).
+
 ### Pose-Conditioned Generation
+
+Use this script when the first frame is given and you want controlled continuation.
 
 ```bash
 python opensource/prism/scripts/run_tp2m.py \
@@ -91,9 +110,16 @@ python opensource/prism/scripts/run_tp2m.py \
   --output_dir outputs/tp2m
 ```
 
-Preset poses: `standing`, `tpose`, `squat`, `kneel`, `sit`.
+Input modes:
+- `--first_frame_npz /path/to/cond.npz`: provide your own first-frame condition.
+- `--first_frame_pose tpose`: use built-in preset pose.
+
+Preset poses: `standing`, `tpose`, `squat`, `kneel`, `sit`.  
+Exactly one of `--first_frame_npz` and `--first_frame_pose` must be provided.
 
 ### Sequential Multi-Segment
+
+Use this script for long-form generation with explicit segment prompts.
 
 ```bash
 python opensource/prism/scripts/run_sequential.py \
@@ -103,7 +129,14 @@ python opensource/prism/scripts/run_sequential.py \
   --output_dir outputs/sequential
 ```
 
+Key arguments:
+- `--prompts`: required list of segment prompts.
+- `--lengths`: optional per-segment frame counts; if omitted, all segments use `129`.
+- `--guidance_scale`: classifier-free guidance scale.
+
 ### Narrative / Free-form Text
+
+Use this script when you have a paragraph-like narrative instead of explicit segment list.
 
 ```bash
 python opensource/prism/scripts/run_narrative.py \
@@ -112,6 +145,11 @@ python opensource/prism/scripts/run_narrative.py \
   --no_rewriter \
   --output_dir outputs/narrative
 ```
+
+Notes:
+- Current script supports `--no_rewriter` mode robustly: it splits `--text` by semicolon (`;`) into segments.
+- If you do not use semicolons, the full text is treated as one segment.
+- `--rewriter_url` path is reserved, but external rewriter client logic is not implemented in this open-source script.
 
 ## Citation
 
