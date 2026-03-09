@@ -1,0 +1,15 @@
+# Pretrained weights (download from Hugging Face)
+pretrained_models/prism_1.4b/
+*.safetensors
+*.bin
+
+# Python
+__pycache__/
+*.pyc
+*.py[cod]
+*.egg-info/
+.eggs/
+
+# Outputs
+*.mp4
+*.npz
