@@ -1,48 +1,45 @@
-# PRISM: Text-to-Motion and Sequential Motion Generation
+# PRISM: Streaming Human Motion Generation with Per-Joint Latent Decomposition
 
-PRISM is a diffusion-based 3D human motion generation model supporting **text-to-motion (T2M)**, **pose-conditioned generation (TP2M)**, **sequential multi-segment generation**, and **narrative/free-form text** (with optional LLM decomposition). All tasks use a single checkpoint in HuggingFace-style layout.
+<p align="center">
+  <a href="https://github.com/ZeyuLing/PRISM">
+    <img src="https://img.shields.io/badge/Paper-ArXiv_(under_review)-B31B1B?style=for-the-badge&logo=arxiv" alt="Paper"/>
+  </a>
+  <a href="https://huggingface.co/ZeyuLing/PRISM-TP2M-1.4B">
+    <img src="https://img.shields.io/badge/Model-HuggingFace-FFBF00?style=for-the-badge&logo=huggingface&logoColor=black" alt="Hugging Face"/>
+  </a>
+  <a href="https://www.youtube.com/watch?v=3PBFpYcwGIM">
+    <img src="https://img.shields.io/badge/Demo-YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube"/>
+  </a>
+  <a href="https://github.com/ZeyuLing/PRISM">
+    <img src="https://img.shields.io/badge/Code-GitHub-181717?style=for-the-badge&logo=github" alt="GitHub"/>
+  </a>
+</p>
 
-## Demo Video
+<p align="center"><b>Zeyu Ling</b>, <b>Qing Shuai</b>, <b>Teng Zhang</b>, <b>Shiyang Li</b>, <b>Bo Han</b>, <b>Changqing Zou</b></p>
+
+PRISM is a unified diffusion framework for 3D human motion generation, supporting **text-to-motion (T2M)**, **pose-conditioned generation (TP2M)**, and **long-horizon sequential generation** in a single model.
+
+## Abstract
+
+We present PRISM, a streaming human motion generation framework built on per-joint latent decomposition. PRISM factorizes motion representation into semantically meaningful joint-wise latent tokens, which enables stable autoregressive generation over long horizons while preserving local motion detail. With one unified model, PRISM supports text-driven motion synthesis, pose-conditioned continuation, and multi-segment narrative composition. Experiments show strong generation quality, temporal consistency, and robustness for long sequences in both quantitative benchmarks and qualitative demos.
+
+## Demo
 
 <p align="center">
   <a href="https://www.youtube.com/watch?v=3PBFpYcwGIM">
-    <img src="https://img.youtube.com/vi/3PBFpYcwGIM/maxresdefault.jpg" alt="PRISM Demo" width="640"/>
+    <img src="https://img.youtube.com/vi/3PBFpYcwGIM/maxresdefault.jpg" alt="PRISM Demo Video" width="860"/>
   </a>
 </p>
+
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=3PBFpYcwGIM">▶ Watch on YouTube</a>
+  <a href="https://www.youtube.com/watch?v=3PBFpYcwGIM">
+    <img src="https://img.shields.io/badge/%E2%96%B6%20Play%20Demo-YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Play Demo"/>
+  </a>
 </p>
 
-## Links
+## Checkpoint Download
 
-| | |
-|---|---|
-| **Paper** | [GitHub](https://github.com/ZeyuLing/PRISM) (arXiv under review) |
-| **Model** | [Hugging Face](https://huggingface.co/ZeyuLing/PRISM-TP2M-1.4B) |
-
----
-
-## Directory layout
-
-```
-prism/
-├── README.md                 # This file
-├── requirements.txt         # Python dependencies for inference
-├── pretrained_models/       # Download checkpoint here (see below)
-├── prism/                   # Model & pipeline code
-├── scripts/                 # Inference scripts
-│   ├── run_t2m.py           # Text-to-motion
-│   ├── run_tp2m.py          # Pose-conditioned (TP2M)
-│   ├── run_sequential.py    # Multi-segment
-│   └── run_narrative.py     # Free-form text (optional LLM rewrite)
-└── ...
-```
-
----
-
-## 1. Download checkpoint
-
-Pretrained weights are hosted on Hugging Face. Download to `pretrained_models/prism_1.4b`:
+Pretrained weights are hosted on Hugging Face and should be downloaded to `pretrained_models/prism_1.4b`:
 
 ```bash
 pip install huggingface_hub
@@ -56,29 +53,26 @@ from huggingface_hub import snapshot_download
 snapshot_download("ZeyuLing/PRISM-TP2M-1.4B", local_dir="pretrained_models/prism_1.4b")
 ```
 
----
+## Dependencies
 
-## 2. Dependencies
-
-- Python ≥3.9
+- Python >= 3.9
 - PyTorch (CUDA recommended)
 - transformers, diffusers, einops, mmengine
 - SMPL/SMPL-X body model (for full mesh rendering)
 
-This repo is designed to run inside the [versatilemotion](https://github.com/ZeyuLing/versatilemotion) main repository. Install dependencies from the main repo, then run scripts from the main repo root:
+This project is designed to run inside the [versatilemotion](https://github.com/ZeyuLing/versatilemotion) repository.
 
 ```bash
 cd /path/to/versatilemotion
 pip install -r requirements.txt
 ```
 
----
+## Quick Inference
 
-## 3. Running inference
+All scripts assume you are in the `versatilemotion` repository root and checkpoint path is:
+`opensource/prism/pretrained_models/prism_1.4b`.
 
-All scripts assume you are in the **versatilemotion repository root** and that the checkpoint is at `opensource/prism/pretrained_models/prism_1.4b`.
-
-### Text-to-motion (T2M)
+### Text-to-Motion
 
 ```bash
 python opensource/prism/scripts/run_t2m.py \
@@ -87,7 +81,7 @@ python opensource/prism/scripts/run_t2m.py \
   --output_dir outputs/t2m
 ```
 
-### Pose-conditioned (TP2M)
+### Pose-Conditioned Generation
 
 ```bash
 python opensource/prism/scripts/run_tp2m.py \
@@ -99,7 +93,7 @@ python opensource/prism/scripts/run_tp2m.py \
 
 Preset poses: `standing`, `tpose`, `squat`, `kneel`, `sit`.
 
-### Sequential multi-segment
+### Sequential Multi-Segment
 
 ```bash
 python opensource/prism/scripts/run_sequential.py \
@@ -109,7 +103,7 @@ python opensource/prism/scripts/run_sequential.py \
   --output_dir outputs/sequential
 ```
 
-### Narrative / free-form text
+### Narrative / Free-form Text
 
 ```bash
 python opensource/prism/scripts/run_narrative.py \
@@ -119,20 +113,17 @@ python opensource/prism/scripts/run_narrative.py \
   --output_dir outputs/narrative
 ```
 
----
-
-## 4. Citation
+## Citation
 
 ```bibtex
-@inproceedings{prism2026,
+@article{ling2026prism,
   title={PRISM: Streaming Human Motion Generation with Per-Joint Latent Decomposition},
-  booktitle={ECCV},
-  year={2026},
+  author={Ling, Zeyu and Shuai, Qing and Zhang, Teng and Li, Shiyang and Han, Bo and Zou, Changqing},
+  journal={arXiv preprint},
+  year={2026}
 }
 ```
 
----
-
-## 5. License
+## License
 
 See the [versatilemotion](https://github.com/ZeyuLing/versatilemotion) repository for license terms.
