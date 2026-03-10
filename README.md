@@ -1,8 +1,8 @@
 # PRISM: Streaming Human Motion Generation with Per-Joint Latent Decomposition
 
 <p align="center">
-  <a href="https://github.com/ZeyuLing/PRISM">
-    <img src="https://img.shields.io/badge/Paper-ArXiv_(under_review)-B31B1B?style=for-the-badge&logo=arxiv" alt="Paper"/>
+  <a href="https://arxiv.org/abs/2603.08590">
+    <img src="https://img.shields.io/badge/Paper-ArXiv-B31B1B?style=for-the-badge&logo=arxiv" alt="Paper"/>
   </a>
   <a href="https://huggingface.co/ZeyuLing/PRISM-TP2M-1.4B">
     <img src="https://img.shields.io/badge/Model-HuggingFace-FFBF00?style=for-the-badge&logo=huggingface&logoColor=black" alt="Hugging Face"/>
@@ -157,8 +157,9 @@ Notes:
 @article{ling2026prism,
   title={PRISM: Streaming Human Motion Generation with Per-Joint Latent Decomposition},
   author={Ling, Zeyu and Shuai, Qing and Zhang, Teng and Li, Shiyang and Han, Bo and Zou, Changqing},
-  journal={arXiv preprint},
-  year={2026}
+  journal={arXiv preprint arXiv:2603.08590},
+  year={2026},
+  url={https://arxiv.org/abs/2603.08590}
 }
 ```
 
