@@ -21,17 +21,17 @@ import numpy as np
 from typing import List, Union, Tuple, Dict, Optional
 
 from torch import nn
-from mmotion.models.body_models.smplx_lite import SmplxLite
-from mmotion.models.post_processing.smooth.smoothnet import SmoothNetFilter
-from mmotion.registry import MODELS
+from prism.models.body_models.smplx_lite import SmplxLite
+from prism.models.post_processing.smooth.smoothnet import SmoothNetFilter
+from prism.registry import MODELS
 from diffusers.models.modeling_outputs import BaseOutput
 from einops import rearrange
 from mmengine.device import get_device
-from mmotion.utils.geometry.ccd_ik import ik
-from mmotion.utils.geometry.matrix import get_rotation
+from prism.utils.geometry.ccd_ik import ik
+from prism.utils.geometry.matrix import get_rotation
 
 # Use stable rotation conversion utilities only
-from mmotion.utils.geometry.rotation_convert import (
+from prism.utils.geometry.rotation_convert import (
     ROT_DIM,
     ROTATION_TYPE,
     axis_angle_to_matrix,
@@ -39,7 +39,7 @@ from mmotion.utils.geometry.rotation_convert import (
     rot_convert,
 )
 
-from mmotion.utils.tensor_utils import tensor_to_array
+from prism.utils.tensor_utils import tensor_to_array
 
 
 # -------------------------- Lightweight output container --------------------- #
@@ -76,7 +76,7 @@ class SMPLPoseProcessor(nn.Module):
             type="SmplxLiteV437Coco17",
         ),
         do_normalize: bool = True,
-        stats_file: str = "data/motionhub/stats.json",
+        stats_file: str = "stats.json",
         rot_type: str = ROTATION_TYPE.ROTATION_6D,
         transl_type: str = "abs",
         smpl_type: str = "smpl_22",
@@ -85,7 +85,7 @@ class SMPLPoseProcessor(nn.Module):
             type="smoothnet",
             window_size=64,
             output_size=64,
-            checkpoint="checkpoints/smoothnet/smoothnet_windowsize64.pth.tar",
+            checkpoint=None,
         ),
     ):
         super().__init__()

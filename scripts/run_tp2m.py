@@ -2,20 +2,19 @@
 # -*- coding: utf-8 -*-
 """
 Pose-conditioned (TP2M): first frame NPZ or preset pose + text prompt → motion.
-Run from the main repo root (versatilemotion). Uses HuggingFace-style checkpoint.
 
   # From NPZ file:
-  python opensource/prism/scripts/run_tp2m.py \\
-    --checkpoint opensource/prism/pretrained_models/prism_1.4b \\
-    --first_frame_npz /path/to/first_frame.npz \\
-    --prompt "The person stands up and walks." \\
+  python scripts/run_tp2m.py \
+    --checkpoint pretrained_models/prism_1.4b \
+    --first_frame_npz /path/to/first_frame.npz \
+    --prompt "The person stands up and walks." \
     --output_dir outputs/tp2m
 
   # From preset pose (standing, tpose, squat, kneel, sit):
-  python opensource/prism/scripts/run_tp2m.py \\
-    --checkpoint opensource/prism/pretrained_models/prism_1.4b \\
-    --first_frame_pose tpose \\
-    --prompt "The person begins to walk forward slowly." \\
+  python scripts/run_tp2m.py \
+    --checkpoint pretrained_models/prism_1.4b \
+    --first_frame_pose tpose \
+    --prompt "The person begins to walk forward slowly." \
     --output_dir outputs/tp2m
 """
 
@@ -24,13 +23,11 @@ import os
 import sys
 import tempfile
 
-_REPO_ROOT = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "..")
-)
-if _REPO_ROOT not in sys.path:
-    sys.path.insert(0, _REPO_ROOT)
+_PRISM_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if _PRISM_ROOT not in sys.path:
+    sys.path.insert(0, _PRISM_ROOT)
 
-# Preset pose prompts (from generate_teaser_demos.py)
+# Preset pose prompts
 PRESET_POSE_PROMPTS = {
     "standing": ("A person stands still with arms at sides.", 33, 20),
     "tpose": (
@@ -73,7 +70,6 @@ def _create_condition_pose_from_preset(pipe, pose_name: str) -> str:
         guidance_scale=5.0,
     )
 
-    # Extract the specified frame
     cond_dict = {}
     for key, val in smplx_dict.items():
         if hasattr(val, "shape") and len(val.shape) >= 1 and val.shape[0] > frame_idx:
@@ -96,21 +92,21 @@ def main():
     parser.add_argument(
         "--checkpoint",
         type=str,
-        default="opensource/prism/pretrained_models/prism_1.4b",
+        default="pretrained_models/prism_1.4b",
         help="Path to HuggingFace-style prism checkpoint dir",
     )
     parser.add_argument(
         "--first_frame_npz",
         type=str,
         default=None,
-        help="Path to .npz with first frame SMPL params (transl, body_pose, global_orient)",
+        help="Path to .npz with first frame SMPL params",
     )
     parser.add_argument(
         "--first_frame_pose",
         type=str,
         default=None,
         choices=list(PRESET_POSE_PROMPTS.keys()),
-        help="Preset pose: standing, tpose, squat, kneel, sit (generates first frame from model)",
+        help="Preset pose: standing, tpose, squat, kneel, sit",
     )
     parser.add_argument(
         "--prompt",
@@ -144,7 +140,7 @@ def main():
     if not args.first_frame_npz and not args.first_frame_pose:
         raise ValueError("Provide either --first_frame_npz or --first_frame_pose.")
 
-    from mmotion.pipelines.prism_from_pretrained import (
+    from prism.pipelines.prism_from_pretrained import (
         load_prism_pipeline_from_pretrained,
     )
     import numpy as np

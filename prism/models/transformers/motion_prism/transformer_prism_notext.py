@@ -34,7 +34,7 @@ from diffusers.models.embeddings import Timesteps, TimestepEmbedding
 from diffusers.configuration_utils import register_to_config
 from diffusers.models.normalization import FP32LayerNorm
 
-from mmotion.registry import HF_MODELS
+from prism.registry import HF_MODELS
 
 from .motion_rope import MotionWanRotaryPosEmbed
 

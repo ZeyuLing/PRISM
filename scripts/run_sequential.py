@@ -2,12 +2,11 @@
 # -*- coding: utf-8 -*-
 """
 Sequential multi-segment: list of prompts (and optional per-segment lengths).
-Run from the main repo root (versatilemotion). Uses HuggingFace-style checkpoint.
 
-  python opensource/prism/scripts/run_sequential.py \\
-    --checkpoint opensource/prism/pretrained_models/prism_1.4b \\
-    --prompts "A person waves." "A person walks." "A person bows." \\
-    --lengths 65 129 65 \\
+  python scripts/run_sequential.py \
+    --checkpoint pretrained_models/prism_1.4b \
+    --prompts "A person waves." "A person walks." "A person bows." \
+    --lengths 65 129 65 \
     --output_dir outputs/sequential
 """
 
@@ -15,21 +14,19 @@ import argparse
 import os
 import sys
 
-_REPO_ROOT = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "..")
-)
-if _REPO_ROOT not in sys.path:
-    sys.path.insert(0, _REPO_ROOT)
+_PRISM_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if _PRISM_ROOT not in sys.path:
+    sys.path.insert(0, _PRISM_ROOT)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="PRISM sequential: multiple prompts (and optional lengths) → long motion"
+        description="PRISM sequential: multiple prompts → long motion"
     )
     parser.add_argument(
         "--checkpoint",
         type=str,
-        default="opensource/prism/pretrained_models/prism_1.4b",
+        default="pretrained_models/prism_1.4b",
         help="Path to HuggingFace-style prism checkpoint dir",
     )
     parser.add_argument(
@@ -70,7 +67,7 @@ def main():
         )
     num_frames_per_segment = args.lengths if args.lengths else 129
 
-    from mmotion.pipelines.prism_from_pretrained import (
+    from prism.pipelines.prism_from_pretrained import (
         load_prism_pipeline_from_pretrained,
     )
     import numpy as np

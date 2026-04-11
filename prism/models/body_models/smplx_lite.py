@@ -1,18 +1,18 @@
 # copied from https://github.com/zju3dv/GVHMR/blob/main/hmr4d/utils/body_model/smplx_lite.py#L14
-from email.quoprimime import body_check
+import os
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from pathlib import Path
-from mmotion.utils.geometry.matrix import forward_kinematics, get_TRS, get_position
+from prism.utils.geometry.matrix import forward_kinematics, get_TRS, get_position
 
 from smplx.utils import Struct, to_np, to_tensor
 from einops import einsum, rearrange
 from time import time
 
-from mmotion.registry import MODELS
-from mmotion.utils.geometry.rotation_convert import (
+from prism.registry import MODELS
+from prism.utils.geometry.rotation_convert import (
     ROTATION_TYPE,
     axis_angle_to_matrix,
     matrix_to_rotation_6d,
@@ -25,7 +25,7 @@ class SmplxLite(nn.Module):
 
     def __init__(
         self,
-        model_path="checkpoints/smpl_models/smplx",
+        model_path="smplx",
         gender="neutral",
         num_betas=10,
     ):
@@ -263,10 +263,10 @@ class SmplxLiteV437Coco17(SmplxLite):
 
     def __init__(
         self,
-        model_path="checkpoints/smpl_models/smplx",
-        smplx2smpl_path="checkpoints/smpl_models/smplx2smpl_sparse.pt",
-        coco17_regressor_path="checkpoints/smpl_models/smpl_coco17_J_regressor.pt",
-        smplx_verts437_path="checkpoints/smpl_models/smplx_verts437.pt",
+        model_path="smplx",
+        smplx2smpl_path=None,
+        coco17_regressor_path=None,
+        smplx_verts437_path=None,
         gender="neutral",
         num_betas=10,
     ):
@@ -275,6 +275,15 @@ class SmplxLiteV437Coco17(SmplxLite):
             gender=gender,
             num_betas=num_betas,
         )
+
+        # Resolve paths relative to model_path's parent directory
+        _smpl_root = str(Path(model_path).parent)
+        if smplx2smpl_path is None:
+            smplx2smpl_path = os.path.join(_smpl_root, "smplx2smpl_sparse.pt")
+        if coco17_regressor_path is None:
+            coco17_regressor_path = os.path.join(_smpl_root, "smpl_coco17_J_regressor.pt")
+        if smplx_verts437_path is None:
+            smplx_verts437_path = os.path.join(_smpl_root, "smplx_verts437.pt")
 
         # Compute mapping (COCO17)
         smplx2smpl = torch.load(smplx2smpl_path)
@@ -330,7 +339,7 @@ class SmplLite(nn.Module):
 
     def __init__(
         self,
-        model_path: str = "checkpoints/smpl_models/smplh",
+        model_path: str = "smplh",
         gender: str = "neutral",
         num_betas: int = 16,
     ) -> None:
@@ -567,10 +576,7 @@ def sync_time():
 
 
 if __name__ == "__main__":
-    from mmengine.device import get_device
-    from mmotion.core.visualization import visualize_kp3d
-
-    device = get_device()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = SmplxLiteV437Coco17().to(device, dtype=torch.bfloat16)
     data = np.load("data/motionhub/aist/smplx_55/gBR_sBM_cAll_d04_mBR0_ch01.npz")
     transl = torch.from_numpy(data["transl"])[None, ...].to(
@@ -608,11 +614,5 @@ if __name__ == "__main__":
         right_hand_pose=right_hand_pose,
     )
 
-    visualize_kp3d(
-        joints.squeeze(0).float().detach().cpu().numpy(),
-        "./test_smplxlite.mp4",
-        convention="blender",
-        data_source="smplx_55",
-        resolution=(512, 512),
-        fps=30,
-    )
+    print(f"FK output joints shape: {joints.shape}")
+    print("Test passed!")

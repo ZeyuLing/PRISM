@@ -1,29 +1,25 @@
 import os
+import logging
 from diffusers import DiffusionPipeline
 from einops import rearrange
 import numpy as np
 import torch
 from transformers import PreTrainedTokenizer, UMT5EncoderModel
-import sys
-import os
 
-sys.path.append(os.curdir)
-from mmotion.models.autoencoders import AutoencoderKLPrism2DTK
-from mmotion.models.autoencoders.gaussian_distribution import (
+from prism.models.autoencoders import AutoencoderKLPrism2DTK
+from prism.models.autoencoders.gaussian_distribution import (
     DiagonalGaussianDistributionNd,
 )
-from mmotion.models.motion_processor.smpl_processor import SMPLPoseProcessor
-from mmotion.models.transformers.motion_prism import PrismTransformerMotionModel
+from prism.models.motion_processor.smpl_processor import SMPLPoseProcessor
+from prism.models.transformers.motion_prism import PrismTransformerMotionModel
 from diffusers.schedulers import (
     FlowMatchEulerDiscreteScheduler,
 )
 from diffusers.pipelines.wan.pipeline_wan import WanPipeline
 from typing import Any, Dict, List, Optional, Tuple, Union
-from mmengine import print_log
-from mmotion.registry import HF_MODELS
-from mmotion.trainers.trainer_prism.trainer_tp2m_prism import PrismTrainer
+from prism.registry import HF_MODELS
 
-from mmotion.utils.geometry.rotation_convert import rotation_6d_to_axis_angle
+from prism.utils.geometry.rotation_convert import rotation_6d_to_axis_angle
 
 from diffusers.utils.torch_utils import randn_tensor
 
@@ -150,7 +146,7 @@ class PrismTP2MPipeline(DiffusionPipeline):
 
         # Only use the first frame for condition
         if motion.shape[1] != 1:
-            print_log(
+            logging.info(
                 f"Warning: Original motion has {motion.shape[1]} frames, only use the first frame for condition pose"
             )
             motion = motion[:, :1]  # [B, 1, J, 6]
@@ -209,7 +205,7 @@ class PrismTP2MPipeline(DiffusionPipeline):
             first_frame_latents = self.encode_motion(condition_pose)
 
         if num_frames % self.vae_scale_factor_temporal != 1:
-            print_log(
+            logging.info(
                 f"`num_frames - 1` has to be divisible by {self.vae_scale_factor_temporal}. Rounding to the nearest number."
             )
             num_frames = (
@@ -576,7 +572,7 @@ def main(
     """
     from mmengine import Config
     from mmengine.runner import load_checkpoint
-    from mmotion.registry import MODELS
+    from prism.registry import MODELS
 
     # Build output path
     output_path = os.path.join(

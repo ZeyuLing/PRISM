@@ -1,28 +1,25 @@
 import os
 import sys
-
-sys.path.append(os.curdir)
+import logging
 
 from diffusers import DiffusionPipeline
 from einops import rearrange
 import numpy as np
 import torch
 from transformers import PreTrainedTokenizer, UMT5EncoderModel
-from mmotion.models.autoencoders import AutoencoderKLPrism2DTK
-from mmotion.models.autoencoders.gaussian_distribution import (
+from prism.models.autoencoders import AutoencoderKLPrism2DTK
+from prism.models.autoencoders.gaussian_distribution import (
     DiagonalGaussianDistributionNd,
 )
-from mmotion.models.motion_processor.smpl_processor import SMPLPoseProcessor
-from mmotion.models.transformers.motion_prism import PrismTransformerMotionModel
+from prism.models.motion_processor.smpl_processor import SMPLPoseProcessor
+from prism.models.transformers.motion_prism import PrismTransformerMotionModel
 from diffusers.schedulers import (
     FlowMatchEulerDiscreteScheduler,
 )
 from typing import Any, Dict, List, Optional, Tuple, Union
-from mmengine import print_log
-from mmotion.registry import HF_MODELS
-from mmotion.trainers.trainer_prism.trainer_tp2m_prism import PrismTrainer
+from prism.registry import HF_MODELS
 
-from mmotion.utils.geometry.rotation_convert import rotation_6d_to_axis_angle
+from prism.utils.geometry.rotation_convert import rotation_6d_to_axis_angle
 
 from diffusers.utils.torch_utils import randn_tensor
 
@@ -45,22 +42,22 @@ class PrismARPipeline(DiffusionPipeline):
         transformer: PrismTransformerMotionModel,
         expand_timesteps: bool = True,
         is_causal: bool = False,
-        dtype=torch.float32,
+        dtype=torch.bfloat16,
     ):
         device = next(transformer.parameters()).device
         super().__init__()
 
         self.register_modules(
-            vae=vae.to(device, dtype),
-            text_encoder=text_encoder.to(device, dtype),
+            vae=vae,
+            text_encoder=text_encoder,
             tokenizer=tokenizer,
-            transformer=transformer.to(device, dtype),
+            transformer=transformer,
             scheduler=scheduler,
         )
 
         self.register_to_config(expand_timesteps=expand_timesteps, is_causal=is_causal)
 
-        self.smpl_processor: SMPLPoseProcessor = smpl_processor.to(device, dtype)
+        self.smpl_processor: SMPLPoseProcessor = smpl_processor
 
         self.latents_mean = torch.tensor(
             vae.config.latents_mean, dtype=dtype, device=device
@@ -153,7 +150,7 @@ class PrismARPipeline(DiffusionPipeline):
 
         # Only use the first frame for condition
         if motion.shape[1] != 1:
-            print_log(
+            logging.info(
                 f"Warning: Original motion has {motion.shape[1]} frames, only use the first frame for condition pose"
             )
             motion = motion[:, :1]  # [B, 1, J, 6]
@@ -372,7 +369,7 @@ class PrismARPipeline(DiffusionPipeline):
             prompts = [prompts]
 
         num_segments = len(prompts)
-        print_log(f"Generating {num_segments} motion segments autoregressively...")
+        logging.info(f"Generating {num_segments} motion segments autoregressively...")
 
         # Per-segment frame counts (round each to valid VAE length)
         scale = self.vae_scale_factor_temporal
@@ -384,7 +381,7 @@ class PrismARPipeline(DiffusionPipeline):
 
         if isinstance(num_frames_per_segment, list):
             if len(num_frames_per_segment) != num_segments:
-                print_log(
+                logging.info(
                     f"num_frames_per_segment list length {len(num_frames_per_segment)} != num_segments {num_segments}; using first value for all."
                 )
                 single = _round_frames(num_frames_per_segment[0] if num_frames_per_segment else 129)
@@ -408,7 +405,7 @@ class PrismARPipeline(DiffusionPipeline):
         # Generate each segment
         with self.progress_bar(total=num_segments) as progress_bar:
             for seg_idx, prompt in enumerate(prompts):
-                print_log(
+                logging.info(
                     f"Generating segment {seg_idx + 1}/{num_segments}: {prompt[:50]}..."
                 )
 
@@ -441,7 +438,7 @@ class PrismARPipeline(DiffusionPipeline):
         # Concatenate all segments along time dimension
         # motion_vec shape: [B, T, J, C]
         full_motion = torch.cat(all_motion_segments, dim=1)
-        print_log(f"Total motion frames: {full_motion.shape[1]}")
+        logging.info(f"Total motion frames: {full_motion.shape[1]}")
 
         # Post-process to SMPL-X format
         smplx_dict = self.post_process_motion(
@@ -666,7 +663,7 @@ def main(
     """
     from mmengine import Config
     from mmengine.runner import load_checkpoint
-    from mmotion.registry import MODELS
+    from prism.registry import MODELS
 
     # Parse prompts (separated by semicolon)
     prompt_list = [p.strip() for p in prompts.split(";") if p.strip()]

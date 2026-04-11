@@ -15,7 +15,7 @@ from diffusers.utils.accelerate_utils import apply_forward_hook  # diffusers uti
 
 from diffusers.loaders import FromOriginalModelMixin
 
-from mmotion.registry import MODELS, HF_MODELS
+from prism.registry import MODELS, HF_MODELS
 from .wan_causalconv import WanCausalConv2dTK
 from .wan_encdec import WanEncoder2DTK, WanDecoder2DTK
 from ..gaussian_distribution import (

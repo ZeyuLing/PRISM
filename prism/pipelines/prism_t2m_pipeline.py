@@ -1,26 +1,23 @@
 import os
 import sys
-
-sys.path.append(os.curdir)
+import logging
 
 from diffusers import DiffusionPipeline
 from einops import rearrange
 import numpy as np
 import torch
 from transformers import PreTrainedTokenizer, UMT5EncoderModel
-from mmotion.models.autoencoders import AutoencoderKLPrism2DTK
-from mmotion.models.motion_processor.smpl_processor import SMPLPoseProcessor
-from mmotion.models.transformers.motion_prism import PrismTransformerMotionModel
+from prism.models.autoencoders import AutoencoderKLPrism2DTK
+from prism.models.motion_processor.smpl_processor import SMPLPoseProcessor
+from prism.models.transformers.motion_prism import PrismTransformerMotionModel
 from diffusers.schedulers import (
     FlowMatchEulerDiscreteScheduler,
     UniPCMultistepScheduler,
 )
 from typing import Any, Dict, List, Optional, Union
-from mmengine import print_log
-from mmotion.registry import HF_MODELS
-from mmotion.trainers.trainer_prism.trainer_tp2m_prism import PrismTrainer
+from prism.registry import HF_MODELS
 
-from mmotion.utils.geometry.rotation_convert import rotation_6d_to_axis_angle
+from prism.utils.geometry.rotation_convert import rotation_6d_to_axis_angle
 
 from diffusers.utils.torch_utils import randn_tensor
 
@@ -103,7 +100,7 @@ class PrismPipeline(DiffusionPipeline):
         device = next(self.transformer.parameters()).device
         do_cfg = guidance_scale > 1.0
         if num_frames % self.vae_scale_factor_temporal != 1:
-            print_log(
+            logging.info(
                 f"`num_frames - 1` has to be divisible by {self.vae_scale_factor_temporal}. Rounding to the nearest number."
             )
             num_frames = (
@@ -391,7 +388,7 @@ def main(
 ):
     from mmengine import Config
     from mmengine.runner import load_checkpoint
-    from mmotion.registry import MODELS
+    from prism.registry import MODELS
 
     output_path = os.path.join(
         output_path,

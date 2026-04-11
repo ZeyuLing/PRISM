@@ -21,7 +21,7 @@ from diffusers.loaders import FromOriginalModelMixin
 # Resolve project root so this file can be run as a script from any cwd.
 _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))
 sys.path.insert(0, _PROJECT_ROOT)
-from mmotion.registry import HF_MODELS, MODELS
+from prism.registry import HF_MODELS, MODELS
 from .wan_causalconv import WanCausalConv2dTK
 from .wan_encdec import WanEncoder2DTK, WanDecoder2DTK
 
@@ -353,7 +353,6 @@ def main(
     save_dir: str = "checkpoints/vermo_vqvae_nostatic_aug_hymotion_4375_iter_430000",
 ):
     # ----------------------------- Test code ----------------------------- #
-    os.chdir(_PROJECT_ROOT)
     from mmengine.device import get_device
     from mmengine import Config
     from mmengine.runner import load_checkpoint

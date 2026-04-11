@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 """
 Text-to-motion: single prompt → one motion clip.
-Run from the main repo root (versatilemotion). Uses HuggingFace-style checkpoint.
 
-  python opensource/prism/scripts/run_t2m.py \\
-    --checkpoint opensource/prism/pretrained_models/prism_1.4b \\
-    --prompt "A person walks forward and waves." \\
+  python scripts/run_t2m.py \
+    --checkpoint pretrained_models/prism_1.4b \
+    --prompt "A person walks forward and waves." \
     --output_dir outputs/t2m
 """
 
@@ -14,12 +13,10 @@ import argparse
 import os
 import sys
 
-# Add main repo root so we can import mmotion
-_REPO_ROOT = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "..")
-)
-if _REPO_ROOT not in sys.path:
-    sys.path.insert(0, _REPO_ROOT)
+# Add prism package root to path
+_PRISM_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if _PRISM_ROOT not in sys.path:
+    sys.path.insert(0, _PRISM_ROOT)
 
 
 def main():
@@ -27,7 +24,7 @@ def main():
     parser.add_argument(
         "--checkpoint",
         type=str,
-        default="opensource/prism/pretrained_models/prism_1.4b",
+        default="pretrained_models/prism_1.4b",
         help="Path to HuggingFace-style prism checkpoint dir",
     )
     parser.add_argument(
@@ -62,7 +59,7 @@ def main():
     )
     args = parser.parse_args()
 
-    from mmotion.pipelines.prism_from_pretrained import (
+    from prism.pipelines.prism_from_pretrained import (
         load_prism_pipeline_from_pretrained,
     )
     import numpy as np

@@ -1,9 +1,10 @@
-# Minimal dependencies for PRISM inference when run from the main repo (versatilemotion).
-# Install from versatilemotion root: pip install -r opensource/prism/requirements.txt
+# Dependencies for PRISM inference (standalone, no mmotion needed).
 torch>=1.13
 transformers>=4.30
 diffusers>=0.25
 einops
 safetensors
-# Required by mmotion (main repo)
+scipy
+smplx
 mmengine
+numpy

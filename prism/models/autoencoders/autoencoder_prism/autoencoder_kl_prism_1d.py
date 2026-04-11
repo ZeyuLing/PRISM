@@ -22,7 +22,7 @@ from diffusers.models.autoencoders.vae import DecoderOutput
 from diffusers.utils.accelerate_utils import apply_forward_hook
 from diffusers.loaders import FromOriginalModelMixin
 
-from mmotion.registry import MODELS, HF_MODELS
+from prism.registry import MODELS, HF_MODELS
 from .wan_causalconv import WanCausalConv1d
 from .wan_encdec import WanEncoder1D, WanDecoder1D
 from ..gaussian_distribution import DiagonalGaussianDistributionNd

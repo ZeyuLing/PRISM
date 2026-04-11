@@ -3,12 +3,11 @@
 """
 Narrative / free-form text: one long description.
 Without rewriter: split by semicolon and use as segments.
-With rewriter: optional LLM service to decompose into segments (you host the API).
 
-  python opensource/prism/scripts/run_narrative.py \\
-    --checkpoint opensource/prism/pretrained_models/prism_1.4b \\
-    --text "A person walks in, waves, sits down, then stands and bows." \\
-    --no_rewriter \\
+  python scripts/run_narrative.py \
+    --checkpoint pretrained_models/prism_1.4b \
+    --text "A person walks in; waves; sits down; then stands and bows." \
+    --no_rewriter \
     --output_dir outputs/narrative
 """
 
@@ -16,11 +15,9 @@ import argparse
 import os
 import sys
 
-_REPO_ROOT = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "..")
-)
-if _REPO_ROOT not in sys.path:
-    sys.path.insert(0, _REPO_ROOT)
+_PRISM_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if _PRISM_ROOT not in sys.path:
+    sys.path.insert(0, _PRISM_ROOT)
 
 
 def main():
@@ -30,7 +27,7 @@ def main():
     parser.add_argument(
         "--checkpoint",
         type=str,
-        default="opensource/prism/pretrained_models/prism_1.4b",
+        default="pretrained_models/prism_1.4b",
         help="Path to HuggingFace-style prism checkpoint dir",
     )
     parser.add_argument(
@@ -48,7 +45,7 @@ def main():
         "--rewriter_url",
         type=str,
         default=None,
-        help="If set (and not --no_rewriter), URL of rewriter API to decompose text into segments",
+        help="If set (and not --no_rewriter), URL of rewriter API",
     )
     parser.add_argument(
         "--output_dir",
@@ -60,7 +57,7 @@ def main():
         "--num_frames_per_segment",
         type=int,
         default=129,
-        help="Frames per segment when not using rewriter (or rewriter does not return lengths)",
+        help="Frames per segment",
     )
     parser.add_argument(
         "--guidance_scale",
@@ -72,20 +69,17 @@ def main():
     args = parser.parse_args()
 
     if args.no_rewriter or not args.rewriter_url:
-        # Simple split by semicolon
         prompts = [p.strip() for p in args.text.split(";") if p.strip()]
         if not prompts:
             prompts = [args.text.strip() or "A person moves."]
         num_frames_per_segment = args.num_frames_per_segment
         lengths = None
     else:
-        # Optional: call rewriter to get segments + lengths (not implemented here;
-        # user can plug in their own client)
         raise NotImplementedError(
-            "Rewriter API client not implemented in this script. Use --no_rewriter and split --text by semicolon."
+            "Rewriter API client not implemented. Use --no_rewriter and split --text by semicolon."
         )
 
-    from mmotion.pipelines.prism_from_pretrained import (
+    from prism.pipelines.prism_from_pretrained import (
         load_prism_pipeline_from_pretrained,
     )
     import numpy as np

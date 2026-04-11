@@ -27,8 +27,7 @@ from diffusers.utils import BaseOutput
 from diffusers.utils.accelerate_utils import apply_forward_hook
 from diffusers.loaders import FromOriginalModelMixin
 
-sys.path.append(os.curdir)
-from mmotion.registry import HF_MODELS, MODELS
+from prism.registry import HF_MODELS, MODELS
 
 from .wan_causalconv import WanCausalConv1d
 from .wan_encdec import WanEncoder1D, WanDecoder1D
